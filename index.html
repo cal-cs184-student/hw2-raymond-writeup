@@ -307,6 +307,49 @@
 			<img src="assets/problem6_boundary.png" alt="Loop subdivision on a mesh with boundary" style="width:70%"/>
 			<figcaption>Boundary-aware Loop subdivision. Figures a and b show the jagged boundaries; the last result uses the boundary rules.</figcaption>
 		</figure>
+
+		<h3>Extra Credit: Modified butterfly subdivision</h3>
+		<p>
+			The Loop subdivision scheme described above updates each vertex position by taking a weighted average of the vertex and its neighbors. As discussed earlier, this can cause sharp corners to become rounded. Modified butterfly subdivision (Zorin, Schröder, and Sweldens, 1996), on the other hand, is an interpolating subdivision scheme that keeps existing vertices fixed and only inserts new vertices. This ensures that the subdivided surface passes through the original vertices, helping preserve the original shape.
+		</p>
+		<p>
+			On a high level, modified butterfly subdivision first computes the positions of new vertices using different rules depending on the local mesh structure:
+			</p>
+			<ol>
+			<li><b>Boundary edges:</b> Suppose the boundary contains four consecutive vertices \(A,B,C,D\), and we want to split edge \(BC\). The new vertex is
+			\[
+			p_{\mathrm{new}}=\frac{9}{16}(B+C)-\frac{1}{16}(A+D)
+			\]</li>
+			<li><b>Regular interior edges:</b> If both endpoints have valence 6 (i.e. connected to 6 edges), we use the standard 8-point butterfly stencil, which takes a weighted combination of the edge endpoints and six surrounding vertices, given by 
+			\[
+				p_{\mathrm{new}}
+				= \frac{1}{2}(A+B)
+				+ \frac{1}{8}(C+D)
+				- \frac{1}{16}(W_1+W_2+W_3+W_4)
+			\]
+			</li>
+			<li><b>One extraordinary endpoint:</b> If one endpoint has valence other than 6, we use a special stencil centered at that endpoint, with weights determined by its valence. For \(K\geq 5\), the weights are some linear combinations of cosines.</li>
+			<li><b>Two extraordinary endpoints:</b> If both endpoints have valence other than 6, we compute the new position using each endpoint's extraordinary stencil and average the two results.</li>
+			</ol>
+			<p>
+			After computing the new vertex positions, we split all original edges and flip the appropriate newly created edges, subdividing each original triangle into four smaller triangles. Unlike Loop subdivision, the positions of existing vertices remain unchanged.
+			</p>
+			<p>
+				In terms of the implementation, we define helper functions to compute vertex valences and the new vertex positions using above mentioned rules. After computing the new vertex positions, similar to loop subdivision, we first store the computed positions in <code>newPosition</code> before modifying the mesh. We then split all original edges, assign the precomputed positions to the inserted vertices, and flip newly created edges connecting an old vertex to a new vertex. Finally, we update the positions of the new vertices while keeping all original vertices fixed.
+			</p>
+			<p>
+				We consider running both loop subdivision and modified butterfly subdivision on the <code>cube.dae</code> mesh (here we splitted the diagonals to make the mesh symmetric). The results are shown below.
+			</p>
+			<figure>
+				<img src="assets/problem6_butterfly.png" alt="Loop subdivision and modified butterfly subdivision of a cube" style="width:80%"/>
+				<figcaption>Loop subdivision and modified butterfly subdivision of a cube.</figcaption>
+			</figure>
+			<p>
+				As we can see, modified butterfly subdivision preserves the original shape of the cube better than loop subdivision. 
+			</p>
+
 		</div>
+
+		
 	</body>
 </html>
