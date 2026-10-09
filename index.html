@@ -45,15 +45,18 @@
 
 		<br>
 
-		Link to webpage: (TODO) <a href="https://cs184.eecs.berkeley.edu/fa26">cs184.eecs.berkeley.edu/fa26</a>
+		Link to webpage: <a href="https://cal-cs184-student.github.io/hw2-raymond-writeup/">https://cal-cs184-student.github.io/hw2-raymond-writeup/</a>
 
 		<br>
 
-		Link to GitHub repository: (TODO) <a href="https://cs184.eecs.berkeley.edu/fa26">cs184.eecs.berkeley.edu/fa26</a>
+		Link to GitHub repository: <a href="https://github.com/cal-cs184-student/hw2-raymond">https://github.com/cal-cs184-student/hw2-raymond</a>
 
 		<h2>Overview</h2>
 		<p>
-			This homework implements Bezier curves and surfaces using de Casteljau evaluation, then builds mesh editing operations on the half-edge data structure. Those operations are area-weighted vertex normals, edge flip, edge split, and Loop subdivision. The edge-split and Loop-subdivision sections also include extra credit for meshes with boundary.
+			In this homework, in section I we first implement Bezier curves and surfaces using the de Casteljau algorithm, then in section II we build mesh editing operations on the half-edge data structure. This includes area-weighted vertex normals, edge flip, edge split, and loop subdivision. For the extra credit, we implement edge split and loop subdivision for meshes with boundary. Together these operations allow us to edit and smooth geometric objects represented as meshes.
+		</p>
+		<p>
+			The hardest part of this homework was implementing the edge flip and edge split operations. It was initially difficult to keep track of all the geometric objects and their relationships, but once I drew the diagrams out I was able to implement these step by step. The most interesting part of this homework was implementing the loop subdivision operation. It was interesting to learn about the different ways to smooth meshes, and the pros and cons of each method.
 		</p>
 
 		<h2>Section I: Bezier Curves and Surfaces</h2>
