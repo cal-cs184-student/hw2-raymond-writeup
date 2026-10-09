@@ -18,99 +18,292 @@
 
 			img {
 				display: inline-block;
+				max-width: 100%;
 			}
 
 			body {
 				font-family: 'Inter', sans-serif;
+				line-height: 1.6;
+				background: #fff;
+				color: #111;
+			}
+
+			code {
+				font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+				font-size: 0.95em;
+			}
+
+			li {
+				margin-bottom: 0.4em;
 			}
 		</style>
 	</head>
 	<body>
 		<div class="container">
 		<h1>CS184/284A Fall 2026 Homework 2 Write-Up</h1>
-		<div style="text-align: center;">Names: </div>
+		<div style="text-align: center;">Raymond Tsao</div>
 
 		<br>
 
 		Link to webpage: (TODO) <a href="https://cs184.eecs.berkeley.edu/fa26">cs184.eecs.berkeley.edu/fa26</a>
 
 		<br>
-		
+
 		Link to GitHub repository: (TODO) <a href="https://cs184.eecs.berkeley.edu/fa26">cs184.eecs.berkeley.edu/fa26</a>
 
-		<figure>
-			<img src="assets/teapot.png" alt="Teapot" style="width:50%"/>
-			<figcaption>You can add images with captions!</figcaption>
-		</figure>
-
-		<!--
-		We've already added one heading per part, to make your write-up as navigable when grading. Please fit your write-up within these sections!
-		-->
-
 		<h2>Overview</h2>
-		Give a high-level overview of what you implemented in this homework. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the homework.
+		<p>
+			This homework implements Bezier curves and surfaces using de Casteljau evaluation, then builds mesh editing operations on the half-edge data structure. Those operations are area-weighted vertex normals, edge flip, edge split, and Loop subdivision. The edge-split and Loop-subdivision sections also include extra credit for meshes with boundary.
+		</p>
 
 		<h2>Section I: Bezier Curves and Surfaces</h2>
 
 		<h3>Part 1: Bezier curves with 1D de Casteljau subdivision</h3>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<p>
+			De Casteljau's algorithm is a recursive algorithm used to evaluate points on a Bezier curve. Given \(n+1\) control points \(P_0^{(0)}, P_1^{(0)}, \ldots, P_n^{(0)}\), the algorithm evaluates the Bezier curve at parameter \(t \in [0,1]\) by recursively computing
+		</p>
+		\[ P_k^{(i+1)} = (1-t)\, P_k^{(i)} + t\, P_{k+1}^{(i)} \]
+		<p>
+			After \(n\) iterations, the algorithm produces a single point \(P_0^{(n)}\), which is the point on the Bezier curve at parameter \(t\).
+		</p>
+		<p>
+			This is implemented in <code>evaluateStep</code>. Given the \(n+1\) control points <code>points</code>, we first allocate an array <code>result</code> of size \(n\), then define
+		</p>
+		\[ \texttt{result[i]} = (1 - t) \cdot \texttt{points[i]} + t \cdot \texttt{points[i + 1]} \]
+		<p>
+			<code>BezierCurve::drawCurve</code> then calls the function until only one point remains.
+		</p>
+		<p>
+			The following plot shows screenshots of each level of the evaluation, with the final curve plotted at the end.
+		</p>
+		<figure>
+			<img src="assets/problem1.png" alt="de Casteljau evaluation levels and the final Bezier curve" style="width:80%"/>
+			<figcaption>Each level of de Casteljau evaluation, with the final curve.</figcaption>
+		</figure>
 
-		<p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is a column in that row. You might find this useful for framing and showing your result images in an organized fashion.</p>
-		<div style="display: flex; flex-direction: column; align-items: center;">
-			<table style="width: 100%; text-align: center; border-collapse: collapse;">
-			  <tr>
-				<td style="text-align: center;">
-				  <img src="assets/teapot.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
-				</td>
-				<td style="text-align: center;">
-				  <img src="assets/teapot.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
-				</td>
-			  </tr>
-			  <tr>
-				<td style="text-align: center;">
-				  <img src="assets/teapot.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
-				</td>
-				<td style="text-align: center;">
-				  <img src="assets/teapot.png" width="400px"/>
-				  <figcaption>Caption goes here.</figcaption>
-				</td>
-			  </tr>
-			</table>
-		</div>
+		<p>
+			The following shows three different Bezier curves obtained by varying the control points.
+		</p>
+		<figure>
+			<img src="assets/problem1_curves.png" alt="Three Bezier curves with different control points" style="width:80%"/>
+			<figcaption>Three Bezier curves with different control points.</figcaption>
+		</figure>
+
+		<p>
+			Below we also show the effect of varying the parameter \(t \in [0,1]\).
+		</p>
+		<figure>
+			<img src="assets/problem1_t.png" alt="Bezier curve evaluation at different values of t" style="width:80%"/>
+			<figcaption>Varying the parameter \(t \in [0,1]\).</figcaption>
+		</figure>
 
 		<h3>Part 2: Bezier surfaces with separable 1D de Casteljau</h3>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<p>
+			For Bezier surfaces, we are given \((n+1)^2\) control points \(P_{i,j}\), where \(i,j = 0, \ldots, n\). To evaluate a point at \((u,v) \in [0,1]^2\), we first perform the 1D de Casteljau algorithm in the \(u\)-direction, namely on each sequence of control points
+		</p>
+		\[
+			P_{0,j}, P_{1,j}, \ldots, P_{n,j},
+			\qquad j = 0, \ldots, n.
+		\]
+		<p>
+			This produces \(n+1\) intermediate points \(Q_0(v), \ldots, Q_n(v)\), where each \(Q_j\) is obtained by evaluating the corresponding Bezier curve at parameter \(u\). We then apply the 1D de Casteljau algorithm to these \(n+1\) intermediate points in the \(v\)-direction, producing the final point on the Bezier surface at \((u,v)\).
+		</p>
+		<p>This is implemented using three functions:</p>
+		<ul>
+			<li><code>BezierPatch::evaluateStep</code>: Given a sequence of control points, return the control points at the next level. This is implemented in the same way as in Part 1.</li>
+			<li><code>BezierPatch::evaluate1D</code>: Given a sequence of control points and a parameter \(t\), return the corresponding point on the Bezier curve. This is implemented by repeatedly calling <code>evaluateStep</code> until only one point remains.</li>
+			<li><code>BezierPatch::evaluate</code>: Evaluate the Bezier patch at parameter \((u,v)\). We first call <code>evaluate1D</code> on each sequence of control points in the \(u\)-direction and store the resulting \(n+1\) intermediate points in an array. We then call <code>evaluate1D</code> on these intermediate points with parameter \(v\) to obtain the final point on the Bezier surface.</li>
+		</ul>
+		<p>The final rendered teapot is shown below.</p>
+		<figure>
+			<img src="assets/problem2.png" alt="Rendered Bezier teapot" style="width:70%"/>
+			<figcaption>Bezier teapot.</figcaption>
+		</figure>
 
 		<h2>Section II: Triangle Meshes and Half-Edge Data Structure</h2>
 
 		<h3>Part 3: Area-weighted vertex normals</h3>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<p>
+			We first implement a helper function <code>getArea</code>, which takes in three vertices \(a\), \(b\), and \(c\) and computes the area of the triangle formed by these vertices. This can be computed with the cross product
+		</p>
+		\[ \triangle = \frac{1}{2}\|(b-a)\times (c-a)\|_2 \]
+		<p>
+			To compute the area-weighted normal, we initialize a zero normal vector <code>av_normal</code>, then:
+		</p>
+		<ol>
+			<li>If the face spanned by the current halfedge <code>h</code> is not a boundary face, compute the area <code>w</code> of the triangle.</li>
+			<li>Let <code>n</code> be the unit normal of the face. Update the accumulated normal as <code>av_normal += w * n</code>.</li>
+			<li>Update the halfedge with <code>h = h-&gt;twin()-&gt;next()</code>. This brings us to the next triangle.</li>
+		</ol>
+		<p>
+			We repeat these steps until we return to the starting halfedge. Finally, we normalize <code>av_normal</code> to obtain the area-weighted vertex normal.
+		</p>
+		<p>The rendered teapot with and without area-weighted normals is shown below.</p>
+		<figure>
+			<img src="assets/problem3.png" alt="Teapot with and without area-weighted normals" style="width:80%"/>
+			<figcaption>Teapot rendered with and without area-weighted vertex normals.</figcaption>
+		</figure>
 
 		<h3>Part 4: Edge flip</h3>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<p>
+			To implement the flip operation (ignoring boundary edges), we first label all geometric objects, including all halfedges, vertices, and faces. The steps are:
+		</p>
+		<ol>
+			<li>
+				Rewrite the halfedges. We rewire the halfedges using <code>setNeighbors</code>. For example, for the halfedge <code>h_bc</code>, its <code>next</code> should be <code>h_dc</code>, and it should now start at vertex <code>a</code>. We thus call
+				\[ \texttt{h_bc->setNeighbors(h_dc, h_cb, a, e0, f_left)} \]
+			</li>
+			<li>
+				Rewrite the vertices. After the halfedges have been rewired, we update the halfedges stored by the affected vertices. For example, we set the halfedge stored by <code>b</code> to <code>h_bd</code>, since <code>h_bc</code> now starts at <code>a</code>. Similarly, we set the halfedge stored by <code>c</code> to <code>h_ca</code>.
+			</li>
+			<li>
+				Rewrite the faces. Finally, we set the halfedges stored by the left and right faces to <code>h_bc</code> and <code>h_cb</code>, respectively.
+			</li>
+		</ol>
+		<p>
+			To help with implementing this function, I followed the instructions, drew a mesh, labeled each geometric object, and wrote down the changes needed. I then implemented these changes in code.
+		</p>
+		<p>Below is an image before and after performing the flip operation on several edges.</p>
+		<figure>
+			<img src="assets/problem4.png" alt="Mesh before and after edge flips" style="width:80%"/>
+			<figcaption>Before and after flipping several edges.</figcaption>
+		</figure>
 
 		<h3>Part 5: Edge split</h3>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+		<p>
+			To implement the split operation, as in the previous part, we first label all geometric objects, including all halfedges, vertices, and faces. The steps are:
+		</p>
+		<ol>
+			<li>
+				Create new geometric objects. We create a new vertex <code>m</code> at the midpoint of vertices <code>b</code> and <code>c</code>. We also create two new faces, three new edges, and six new halfedges. The original edge <code>e0</code> is reused for the edge connecting <code>b</code> and <code>m</code>.
+			</li>
+			<li>
+				Rewrite the halfedges. We rewire the halfedges using <code>setNeighbors</code> to form four triangles. For example, for the halfedge <code>h_bc</code>, its <code>next</code> should be <code>h_ma</code>, and it should still start at vertex <code>b</code>. We thus call
+				\[ \texttt{h_bc->setNeighbors(h_ma, h_cb, b, e0, f_left)} \]
+			</li>
+			<li>
+				Rewrite the edges. We set the halfedges stored by the new edges <code>e_mc</code>, <code>e_am</code>, and <code>e_dm</code> to <code>h_mc</code>, <code>h_am</code>, and <code>h_dm</code>, respectively. We mark <code>e_am</code> and <code>e_dm</code> as new edges, while marking <code>e0</code> and <code>e_mc</code> as segments of the original edge.
+			</li>
+			<li>
+				Rewrite the vertices. We update the halfedge stored by each vertex to an outgoing halfedge. For example, we set the halfedge stored by <code>m</code> to <code>h_cb</code>, which now starts at <code>m</code> and points to <code>b</code>. We also mark <code>m</code> as a new vertex.
+			</li>
+			<li>
+				Rewrite the faces. Finally, we set the halfedges stored by <code>f_left</code>, <code>f_right</code>, <code>f_left_new</code>, and <code>f_right_new</code> to <code>h_bc</code>, <code>h_cb</code>, <code>h_mc</code>, and <code>h_cm</code>, respectively.
+			</li>
+		</ol>
+		<p>Below is an image before and after performing the split operation on several edges.</p>
+		<figure>
+			<img src="assets/problem5_s.png" alt="Mesh before and after edge splits" style="width:80%"/>
+			<figcaption>Before and after splitting several edges.</figcaption>
+		</figure>
+		<p>Below is another image before and after performing both split and flip operations.</p>
+		<figure>
+			<img src="assets/problem5_fs.png" alt="Mesh before and after split and flip" style="width:80%"/>
+			<figcaption>Before and after both split and flip.</figcaption>
+		</figure>
+
+		<h4>Extra Credit: Boundary Edges</h4>
+		<p>
+			The interior implementation does not support splitting boundary edges. Unlike an interior edge, a boundary edge is adjacent to only one non-boundary triangle, so we split this triangle into two rather than four. The implementation is similar, with the following differences:
+		</p>
+		<ol>
+			<li>Create new geometric objects. We create one new vertex <code>m</code>, one new face, two new edges, and four new halfedges.</li>
+			<li>Rewire the halfedges. We update the halfedges to form two interior triangles, while also updating the virtual boundary loop from <code>c -&gt; b</code> to <code>c -&gt; m -&gt; b</code>.</li>
+			<li>Rewrite the remaining objects. As before, we update the representative halfedges of all affected edges, vertices, and faces, and mark the newly created connecting edge <code>e_am</code> as new.</li>
+		</ol>
+		<p>
+			Below is the result before and after implementing boundary edge splitting on <code>beetle.dae</code>. The boundary edges are now split correctly.
+		</p>
+		<figure>
+			<img src="assets/problem5_boundary.png" alt="Beetle mesh before and after boundary edge splits" style="width:70%"/>
+			<figcaption>Boundary edge splits on <code>beetle.dae</code>.</figcaption>
+		</figure>
 
 		<h3>Part 6: Loop subdivision for mesh upsampling</h3>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-		<h2>(Optional) Section III: Potential Extra Credit - Art Competition: Model something Creative</h2>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-
-		<h2>Additional Notes (please remove)</h2>
-		<ul>
-			<li>You can also add code if you'd like as so: <code>code code code</code></li>
-			<li>If you'd like to add math equations, 
-				<ul>
-					<li>You can write inline equations like so: \( a^2 + b^2 = c^2 \)</li>
-					<li>You can write display equations like so: \[ a^2 + b^2 = c^2 \]</li>
-				</ul>
+		<p>To implement Loop subdivision, we follow these steps:</p>
+		<ol>
+			<li>
+				Compute new positions for all vertices. For each vertex \(v\), we first compute its weight \(u\). We then traverse its neighboring vertices and sum their positions, and define its new position as
+				\[
+					(1 - \deg(v)\, u)\, \texttt{v_pos}
+					+ u \sum_{v' \in N(v)} \texttt{v'_pos}
+				\]
+				where \(N(v)\) is the set of neighboring vertices of \(v\). We store this result in <code>v-&gt;newPosition</code>.
 			</li>
-		</ul>
+			<li>
+				Compute new vertex positions for the edges. For each edge \(e\), we identify the positions \(A\) and \(B\) of its endpoints and the positions \(C\) and \(D\) of the opposite vertices in its two adjacent triangles. The position of the new vertex that will be inserted when splitting the edge is given by
+				\[
+					\frac{3}{8}(A+B) + \frac{1}{8}(C+D).
+				\]
+				We store this result in <code>e-&gt;newPosition</code> for use after splitting the edge.
+			</li>
+			<li>
+				Split the original edges. We first store all original edges in a list and mark them as original edges. We then iterate over this list and split each non-boundary edge, ensuring that newly created edges are not split again. For each inserted vertex <code>m</code>, we set <code>m-&gt;newPosition</code> to the position previously stored in <code>e-&gt;newPosition</code>. The <code>splitEdge</code> function marks the inserted vertex and new edges appropriately.
+			</li>
+			<li>
+				Flip the new edges. We iterate over all edges and flip each new edge that connects an original vertex to a new vertex. We identify these edges by checking that <code>e-&gt;isNew</code> is true and that the <code>isNew</code> flags of its two endpoints differ.
+			</li>
+			<li>
+				Update the vertex positions. Finally, we copy <code>v-&gt;newPosition</code> into <code>v-&gt;position</code> for every vertex to apply the positions computed earlier.
+			</li>
+		</ol>
+		<p>
+			The images below show Loop subdivision applied to <code>cube.dae</code>. As we perform more subdivision iterations, sharp corners and edges become more rounded, and the surface becomes smoother. This is because every new position is a weighted average of the old vertex and its neighbors.
+		</p>
+		<figure>
+			<img src="assets/problem6_cube.png" alt="Loop subdivision of a cube" style="width:80%"/>
+			<figcaption>Loop subdivision on <code>cube.dae</code>.</figcaption>
+		</figure>
+		<p>
+			We can reduce this rounding by pre-splitting selected edges. Intuitively, pre-splitting adds vertices closer to the sharp corners, which can reduce how far these corners move during the averaging step. This can be seen by pre-splitting each of the 12 edges of the cube before applying Loop subdivision. With pre-splitting, we observe a more corner-like shape.
+		</p>
+		<figure>
+			<img src="assets/problem6_presplit.png" alt="Loop subdivision after pre-splitting cube edges" style="width:80%"/>
+			<figcaption>Loop subdivision after pre-splitting the cube's edges.</figcaption>
+		</figure>
+		<p>
+			From the figure above, we also observe that after several iterations of Loop subdivision, the cube becomes slightly asymmetric. This is because its initial triangulation is asymmetric. Each square face contains only one diagonal, giving the corners different neighbor configurations.
+		</p>
+		<p>
+			To address this, we split the diagonal of each square face (adding a vertex at its center and dividing it into four triangles). This gives a symmetric triangulation. As seen below, this makes the resulting Loop subdivision symmetric.
+		</p>
+		<figure>
+			<img src="assets/problem6_preproc.png" alt="Symmetric Loop subdivision after preprocessing the cube" style="width:80%"/>
+			<figcaption>Symmetric Loop subdivision after splitting each face diagonal.</figcaption>
+		</figure>
+
+		<h4>Extra Credit: Meshes with Boundary</h4>
+		<p>
+			In the implementation above, we skip splitting boundary edges. This results in jagged boundaries after Loop subdivision (Figure a). However, even if we enable splitting for boundary edges, the boundaries remain jagged (Figure b).
+		</p>
+		<p>
+			Intuitively, this zigzag behavior arises from how vertex positions are updated. Recall that the new position of an existing vertex is defined as
+		</p>
+		\[
+			(1 - \deg(v)\, u)\, \texttt{v_pos}
+			+ u \sum_{v' \in N(v)} \texttt{v'_pos}
+		\]
+		<p>
+			For boundary vertices, this rule averages over both boundary and interior neighbors, which pulls the vertices inward. Meanwhile, newly inserted vertices are placed at the midpoints of the original boundary edges. This causes alternating inward and outward displacements along the boundary, producing a zigzag pattern as we see in Figure b.
+		</p>
+		<p>
+			To fix this, we update each boundary vertex using only its two neighbors along the boundary, ignoring interior vertices. The new position is given by
+		</p>
+		\[
+			\frac{3}{4}\, \texttt{v_pos}
+			+ \frac{1}{8}\left(\texttt{v_prev_pos} + \texttt{v_next_pos}\right),
+		\]
+		<p>
+			where <code>v_prev</code> and <code>v_next</code> are the two neighboring vertices along the boundary. Similarly, for boundary edges, we replace the standard Loop subdivision weighting rule with the midpoint rule
+		</p>
+		\[
+			\frac{1}{2}(A+B).
+		\]
+		<p>After implementing these features, Loop subdivision works correctly on the boundary.</p>
+		<figure>
+			<img src="assets/problem6_boundary.png" alt="Loop subdivision on a mesh with boundary" style="width:70%"/>
+			<figcaption>Boundary-aware Loop subdivision. Figures a and b show the jagged boundaries; the last result uses the boundary rules.</figcaption>
+		</figure>
 		</div>
 	</body>
 </html>
